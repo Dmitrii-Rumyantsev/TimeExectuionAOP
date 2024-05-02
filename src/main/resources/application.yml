@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: TaskOne
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: dima
+    password: 1607
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database: postgresql
