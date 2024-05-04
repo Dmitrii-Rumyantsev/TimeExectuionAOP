@@ -11,7 +11,6 @@ public interface MethodRepository extends CrudRepository<Method, Long> {
 
   List<Method> findAll();
 
-  Method save(Method method);
-
+  Optional<Method> findByMethodNameAndClassName(String methodName, String className);
   Optional<Method> findById(Long method_id);
 }

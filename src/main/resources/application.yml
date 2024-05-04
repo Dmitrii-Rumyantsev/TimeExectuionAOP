@@ -1,9 +1,12 @@
 spring:
+  mvc:
+    format:
+      date-time: yyyy-MM-dd'T'HH:mm:ss
   application:
     name: TaskOne
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: dima
+    url: jdbc:postgresql://localhost:5432/TaskOneT1
+    username: postgres
     password: 1607
     driver-class-name: org.postgresql.Driver
   jpa:

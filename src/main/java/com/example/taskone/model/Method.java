@@ -11,18 +11,16 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
-import jdk.jfr.Enabled;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(name = "method")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Method {
 
   @Id
