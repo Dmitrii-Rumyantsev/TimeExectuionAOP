@@ -1,8 +1,9 @@
 package com.example.taskone.dto;
 
-import com.example.taskone.model.Method;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 public class TimeExectuionDTO {
@@ -14,6 +15,4 @@ public class TimeExectuionDTO {
   private Long execution;
 
   private Boolean isComplete;
-
-  private Method method;
 }

@@ -22,15 +22,16 @@ CREATE TABLE account(
     phone varchar(255) not null,
     email varchar(255) not null
 );
-insert into method (method_id,class_name, method_name) values (1,'dsd','dsd');
 
-select * from method;
-select * from time_exectuion;
-select * from account;
 
 SELECT m.class_name, m.method_name, te.start_time, te.end_time, te.execution
 FROM method m
  INNER JOIN time_exectuion te ON m.method_id = te.method_id;
+
+
+select * from method;
+select * from time_exectuion;
+select * from account;
 
 drop table method cascade ;
 drop table account cascade ;

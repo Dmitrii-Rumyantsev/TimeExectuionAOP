@@ -21,53 +21,45 @@ public class TrackAsyncTimeAspect {
 
   @Autowired
   private MethodRepository methodRepository;
+
   @Autowired
   private TimeExecutionRepository timeExecutionRepository;
 
   @Pointcut("@annotation(com.example.taskone.annotation.TrackAsyncTime)")
-  public void timeAsyncPoincut() {
+  public void asyncTimePointcut() {
   }
 
-  @Around("timeAsyncPoincut()")
-  public Object trackAsyncTime(ProceedingJoinPoint joinPoint) {
+  @Around("asyncTimePointcut()")
+  public Object trackAsyncTime(ProceedingJoinPoint joinPoint) throws Throwable {
     String methodName = joinPoint.getSignature().getName();
     String className = joinPoint.getSignature().getDeclaringTypeName();
-    log.info("Из класса {} запустился метод асинхронный метод {}", className, methodName);
+    log.info("Async method {} from class {} is invoked", methodName, className);
+
     Method method = methodRepository.findByMethodNameAndClassName(methodName, className)
-        .orElseGet(() -> {
-          Method newMethod = new Method();
-          newMethod.setMethodName(methodName);
-          newMethod.setClassName(className);
-          return methodRepository.save(newMethod);
-        });
+        .orElseGet(() -> methodRepository.save(new Method(methodName, className)));
+
     LocalDateTime startTime = LocalDateTime.now();
     Object result;
-    TimeExectuion timeExectuion = new TimeExectuion();
-    timeExectuion.setMethod(method);
-    timeExectuion.setStartTime(startTime);
+
     try {
       result = joinPoint.proceed();
-    } catch (Throwable e) {
-      LocalDateTime endTime = LocalDateTime.now();
-      timeExectuion.setEndTime(endTime);
-      timeExectuion.setExecution(Duration.between(
-              startTime, endTime)
-          .toMillis()
-      );
-      timeExectuion.setIsComplete(false);
-      timeExecutionRepository.save(timeExectuion);
-      log.error("Асинхронный метод {} не выполнился {}", methodName, className,
-          e.getMessage());
-      throw new RuntimeException(e);
+    } catch (Throwable throwable) {
+      log.error("Async method {} encountered an error: {}", methodName, throwable.getMessage());
+      throw throwable;
     }
+
     LocalDateTime endTime = LocalDateTime.now();
-    timeExectuion.setEndTime(endTime);
-    Duration execution = Duration.between(startTime,endTime);
-    log.info("Асинхронный методы {} выполнился за {} ms",methodName, execution);
-    timeExectuion.setExecution(execution.toMillis());
-    timeExectuion.setIsComplete(true);
-    timeExecutionRepository.save(timeExectuion);
-    log.info("Сохранение в БД");
+    Duration executionTime = Duration.between(startTime, endTime);
+
+    TimeExectuion timeExecution = new TimeExectuion();
+    timeExecution.setStartTime(startTime);
+    timeExecution.setEndTime(endTime);
+    timeExecution.setExecution(executionTime.toMillis());
+    timeExecution.setIsComplete(true);
+    timeExecution.setMethod(method);
+    timeExecutionRepository.save(timeExecution);
+
+    log.info("Async method {} executed in {} milliseconds", methodName, executionTime.toMillis());
     return result;
   }
 }
