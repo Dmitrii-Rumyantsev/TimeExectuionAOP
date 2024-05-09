@@ -10,10 +10,10 @@ public interface AccountService {
 
   Account addAccount(AccountDTO accountDTO);
 
-  List<AccountDTO> addAccounts(List<AccountDTO> accountDTOList);
-  List<AccountDTO> getAllAccount();
+  List<Account> addAccounts(List<AccountDTO> accountDTOList);
+  List<Account> getAllAccount();
 
-  CompletableFuture<Optional<AccountDTO>> getAccountById(Long id);
+  CompletableFuture<Optional<Account>> getAccountById(Long id);
 
-  CompletableFuture<Optional<AccountDTO>> getAccountByEmail(String email);
+  CompletableFuture<Optional<Account>> getAccountByEmail(String email);
 }

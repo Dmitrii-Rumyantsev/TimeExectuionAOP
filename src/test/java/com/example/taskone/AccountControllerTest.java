@@ -1,53 +1,93 @@
 package com.example.taskone;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.example.taskone.contoller.AccountController;
 import com.example.taskone.dto.AccountDTO;
+import com.example.taskone.mapper.AccountMappers;
+import com.example.taskone.mapper.AccountMappersImpl;
 import com.example.taskone.model.Account;
 import com.example.taskone.service.AccountService;
-import com.example.taskone.service.impl.AccountServiceImpl;
-import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-@ExtendWith(MockitoExtension.class)
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
 public class AccountControllerTest {
 
-  @Mock
-  private AccountServiceImpl accountService;
+    @Mock
+    private AccountService accountService;
 
-  @InjectMocks
-  private AccountController accountController;
+    @Mock
+    private AccountMappersImpl accountMappers;
 
-  private MockMvc mockMvc;
+    @InjectMocks
+    private AccountController accountController;
 
-  @BeforeEach
-  void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(accountController).build();
-  }
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-  @Test
-  void createAccount() throws Exception {
-    AccountDTO accountDTO = new AccountDTO("Дима Иванов", LocalDate.parse("1992-01-01"),
-        "1234567899", "ivan1@example.com");
-    Account account = new Account();
-    when(accountService.addAccount(accountDTO)).thenReturn(account);
-    mockMvc.perform(post("/api/accounts/user"))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.fullName").value("Дима Иванов"))
-        .andExpect(jsonPath("$.dateBirth").value("1992-01-01"))
-        .andExpect(jsonPath("$.phone").value("1234567899"))
-        .andExpect(jsonPath("$.email").value("ivan1@example.com"));
-  }
+    @Test
+    public void testGetAllAccounts() {
+        List<Account> accounts = new ArrayList<>();
+        accounts.add(new Account(1L, "Дмитрий Иванов", LocalDate.parse("1999-01-04"), "1234567890", "dima123@example.com"));
+
+        when(accountService.getAllAccount()).thenReturn(accounts);
+        when(accountMappers.toDTOList(accounts)).thenCallRealMethod();
+
+        ResponseEntity<List<AccountDTO>> responseEntity = accountController.getAllAccounts();
+
+        assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertEquals(accounts.size(), responseEntity.getBody().size());
+        assertEquals(accounts.get(0).getFullName(), responseEntity.getBody().get(0).getFullName());
+        assertEquals(accounts.get(0).getDateBirth(), responseEntity.getBody().get(0).getDateBirth());
+        assertEquals(accounts.get(0).getPhone(), responseEntity.getBody().get(0).getPhone());
+        assertEquals(accounts.get(0).getEmail(), responseEntity.getBody().get(0).getEmail());
+
+    }
+
+    @Test
+    public void testGetAccountById() {
+        Long accountId = 1L;
+        Account account = new Account(accountId, "Дмитрий Иванов", LocalDate.parse("1999-01-04"), "1234567890", "john@example.com");
+
+        CompletableFuture<Optional<Account>> accountFuture = CompletableFuture.completedFuture(Optional.of(account));
+        when(accountService.getAccountById(accountId)).thenReturn(accountFuture);
+        when(accountMappers.toDTO(account)).thenCallRealMethod();
+
+        ResponseEntity<?> responseEntity = accountController.getAccountById(accountId).join();
+
+        assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertEquals(account.getFullName(), ((AccountDTO) responseEntity.getBody()).getFullName());
+        assertEquals(account.getDateBirth(), ((AccountDTO) responseEntity.getBody()).getDateBirth());
+        assertEquals(account.getPhone(), ((AccountDTO) responseEntity.getBody()).getPhone());
+        assertEquals(account.getEmail(), ((AccountDTO) responseEntity.getBody()).getEmail());
+    }
+
+    @Test
+    public void testGetAccountByEmail() {
+        String email = "john@example.com";
+        Account account = new Account(1L, "Дмитрий Иванов", LocalDate.parse("1999-01-04"), "1234567890", email);
+
+        CompletableFuture<Optional<Account>> accountFuture = CompletableFuture.completedFuture(Optional.of(account));
+        when(accountService.getAccountByEmail(email)).thenReturn(accountFuture);
+        when(accountMappers.toDTO(account)).thenCallRealMethod();
+
+        ResponseEntity<AccountDTO> responseEntity = accountController.getAccountByEmail(email).join();
+
+        assertEquals(HttpStatus.FOUND, responseEntity.getStatusCode());
+        assertEquals(email, responseEntity.getBody().getEmail());
+    }
 }

@@ -11,7 +11,10 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -31,48 +34,42 @@ public class AccountServiceImpl implements AccountService {
   @Override
   @TrackTime
   public Account addAccount(AccountDTO accountDTO) {
-    return accountRepository.save(
-        accountMappers.toModel(accountDTO)
-    );
+    return accountRepository.save(accountMappers.toModel(accountDTO));
   }
 
   @Override
   @Transactional
   @TrackTime
-  public List<AccountDTO> addAccounts(List<AccountDTO> accountDTOList) {
+  public List<Account> addAccounts(List<AccountDTO> accountDTOList) {
     return accountDTOList.stream()
         .filter(x -> accountRepository.findByPhoneOrEmail(x.getPhone(), x.getEmail()).isEmpty())
         .map(accountMappers::toModel)
         .map(accountRepository::save)
-        .map(accountMappers::toDTO)
         .collect(Collectors.toList());
   }
 
 
   @Override
   @TrackTime
-  public List<AccountDTO> getAllAccount() {
-    List<Account> accounts = accountRepository.findAll();
-    return accountMappers.toDTOList(accounts);
+  public List<Account> getAllAccount() {
+    return accountRepository.findAll();
   }
 
   @Override
   @TrackAsyncTime
   @Async("asyncExecutor")
-  public CompletableFuture<Optional<AccountDTO>> getAccountByEmail(String email) {
+  public CompletableFuture<Optional<Account>> getAccountByEmail(String email) {
     return CompletableFuture.supplyAsync(() -> {
-      Optional<Account> account = accountRepository.findByEmail(email);
-      return account.map(accountMappers::toDTO);
+      return accountRepository.findByEmail(email);
     });
   }
 
   @Override
   @TrackAsyncTime
   @Async("asyncExecutor")
-  public CompletableFuture<Optional<AccountDTO>> getAccountById(Long id) {
+  public CompletableFuture<Optional<Account>> getAccountById(Long id) {
     return CompletableFuture.supplyAsync(() -> {
-          Optional<Account> account = accountRepository.findById(id);
-          return account.map(accountMappers::toDTO);
+          return accountRepository.findById(id);
         }
     );
   }

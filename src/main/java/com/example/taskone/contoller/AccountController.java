@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/accounts")
 public class AccountController {
 
+
   private final AccountService accountService;
 
   private final AccountMappers accountMappers;
@@ -56,8 +57,8 @@ public class AccountController {
           )
       )
   })
-  public ResponseEntity<AccountDTO> createAccount(@RequestBody @Valid AccountDTO accountDTO) {
-    Account account = accountService.addAccount(accountDTO);
+  public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountDTO accountDTO) {
+    Account account =  accountService.addAccount(accountDTO);
     return new ResponseEntity<>(accountMappers.toDTO(account), HttpStatus.CREATED);
   }
 
@@ -82,8 +83,8 @@ public class AccountController {
   })
   public ResponseEntity<List<AccountDTO>> createAccounts(
       @RequestBody @Valid List<AccountDTO> accountDTOList) {
-    accountDTOList = accountService.addAccounts(accountDTOList);
-    return new ResponseEntity<>(accountDTOList, HttpStatus.CREATED);
+    List<Account> accountList = accountService.addAccounts(accountDTOList);
+    return new ResponseEntity<>(accountMappers.toDTOList(accountList), HttpStatus.CREATED);
   }
   @GetMapping
   @ApiResponses(value = {
@@ -97,8 +98,8 @@ public class AccountController {
       )
   })
   public ResponseEntity<List<AccountDTO>> getAllAccounts() {
-    List<AccountDTO> accounts = accountService.getAllAccount();
-    return new ResponseEntity<>(accounts, HttpStatus.FOUND);
+    List<Account> accounts = accountService.getAllAccount();
+    return new ResponseEntity<>(accountMappers.toDTOList(accounts), HttpStatus.FOUND);
   }
 
   @GetMapping("/{id}")
@@ -121,9 +122,10 @@ public class AccountController {
       )
   })
   public CompletableFuture<ResponseEntity<?>> getAccountById(@PathVariable Long id) {
-    CompletableFuture<Optional<AccountDTO>> accountFuture = accountService.getAccountById(id);
+    CompletableFuture<Optional<Account>> accountFuture = accountService.getAccountById(id);
     return accountFuture.thenApply(accountDTO ->
-      accountDTO.map(v -> new ResponseEntity<>(v, HttpStatus.FOUND))
+      accountDTO.map(accountMappers::toDTO)
+              .map(v -> new ResponseEntity<>(v, HttpStatus.FOUND))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)));
   }
 
@@ -147,9 +149,10 @@ public class AccountController {
   })
   @GetMapping("/email/{email}")
   public CompletableFuture<ResponseEntity<AccountDTO>> getAccountByEmail(@PathVariable String email) {
-    CompletableFuture<Optional<AccountDTO>> accountFuture = accountService.getAccountByEmail(email);
+    CompletableFuture<Optional<Account>> accountFuture = accountService.getAccountByEmail(email);
     return accountFuture.thenApply(accountDTOOptional ->
-        accountDTOOptional.map(value -> new ResponseEntity<>(value, HttpStatus.FOUND))
+        accountDTOOptional.map(accountMappers::toDTO)
+            .map(value -> new ResponseEntity<>(value, HttpStatus.FOUND))
             .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)));
   }
 
