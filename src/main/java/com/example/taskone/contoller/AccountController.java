@@ -99,6 +99,7 @@ public class AccountController {
   })
   public ResponseEntity<List<AccountDTO>> getAllAccounts() {
     List<Account> accounts = accountService.getAllAccount();
+    List<AccountDTO> list = accountMappers.toDTOList(accounts);
     return new ResponseEntity<>(accountMappers.toDTOList(accounts), HttpStatus.FOUND);
   }
 

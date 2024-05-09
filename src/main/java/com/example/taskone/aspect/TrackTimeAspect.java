@@ -34,10 +34,13 @@ public class TrackTimeAspect {
   public Object trackTime(ProceedingJoinPoint joinPoint) throws Throwable {
     String methodName = joinPoint.getSignature().getName();
     String className = joinPoint.getSignature().getDeclaringTypeName();
-    log.info("Method {} from class {} is invoked", methodName, className);
+    log.info("Метод {} из класса {} запустился", methodName, className);
 
     Method method = methodRepository.findByMethodNameAndClassName(methodName, className)
-        .orElseGet(() -> methodRepository.save(new Method(methodName, className)));
+            .orElseGet(() -> methodRepository.save(Method.builder()
+                    .className(className)
+                    .methodName(methodName)
+                    .build()));
 
     LocalDateTime startTime = LocalDateTime.now();
     Object result;
@@ -45,22 +48,23 @@ public class TrackTimeAspect {
     try {
       result = joinPoint.proceed();
     } catch (Throwable throwable) {
-      log.error("Method {} encountered an error: {}", methodName, throwable.getMessage());
+      log.error("В методе {} произошла ошибка: {}", methodName, throwable.getMessage());
       throw throwable;
     }
 
     LocalDateTime endTime = LocalDateTime.now();
     Duration executionTime = Duration.between(startTime, endTime);
 
-    TimeExectuion timeExecution = new TimeExectuion();
-    timeExecution.setStartTime(startTime);
-    timeExecution.setEndTime(endTime);
-    timeExecution.setExecution(executionTime.toMillis());
-    timeExecution.setIsComplete(true);
-    timeExecution.setMethod(method);
+    TimeExectuion timeExecution = TimeExectuion.builder()
+            .startTime(startTime)
+            .endTime(endTime)
+            .execution(executionTime.toMillis())
+            .isComplete(true)
+            .method(method)
+            .build();
     timeExecutionRepository.save(timeExecution);
 
-    log.info("Method {} executed in {} milliseconds", methodName, executionTime.toMillis());
+    log.info("Метод {} выполнился за {} мс", methodName, executionTime.toMillis());
     return result;
   }
 }
